@@ -6,6 +6,7 @@ const port = 3000
 const CLIENT_ID     =process.env.CLIENT_ID
 const CLIENT_SECRET =process.env.CLIENT_SECRET
 const REDIRECT_URI  =process.env.REDIRECT_URI
+const statekey = 'sporify_auth_state'
 
 app.get('/auth/login', (req, res) => {
     
@@ -14,18 +15,24 @@ app.get('/auth/login', (req, res) => {
                  user-read-email \
                  user-read-private"  
     var state = generateRandomString(16);
-  
+    
+    res.cookie(statekey, state);
+
     var auth_query_parameters = new URLSearchParams({
         response_type: "code",
         redirect_uri: REDIRECT_URI,
-        client_id: CLIENT_ID
-//        scope: scope,
-//        state: state
+        client_id: CLIENT_ID,
+        //scope: scope,
+        state: state,
     })
     // peticion de redireccion a la app principal 
     res.redirect('https://accounts.spotify.com/authorize/?' + auth_query_parameters.toString());
 })
-  
+
+app.get('/auth/callback', (req,res)=>{
+    res.send('callback');
+})
+
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
