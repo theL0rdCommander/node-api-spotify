@@ -1,6 +1,7 @@
 require('dotenv').config()
 const express = require('express')
 const axios = require('axios')
+const querystring = require('querystring');
 const app = express()
 const port = 3000
 
@@ -38,38 +39,33 @@ app.get('/auth/login', (req, res) => {
     res.redirect('https://accounts.spotify.com/authorize/?' + auth_query_parameters.toString());
 })
 
-app.get('/auth/callback', (req,res)=>{
+app.get('/auth/callback', (req, res) => {
     const code = req.query.code || null;
-    var token_query_parameters = new URLSearchParams({
+  
+    axios({
+      method: 'post',
+      url: 'https://accounts.spotify.com/api/token',
+      data: querystring.stringify({
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: REDIRECT_URI,
-        //client_id: CLIENT_ID,
-        //code_verifier: code_verifier
-    }).toString();
-
-    axios({
-        method: 'post',
-        url: 'https://accounts.spotify.com/api/token',
-        data: token_query_parameters,
-        headers: {
-            content_type: 'application/x-www-form-urlencoded',
-            Authorization: 'Basic ' + (new Buffer(CLIENT_ID + ':' + CLIENT_SECRET).toString('base64'))
-        }
-    }).then(response => {
-        if(response.status === 200){
-            console.log("acceso al token completado");
-            //res.send( response.data.toString())
-            const url_params = new URLSearchParams(window.location.search);
-            res.send( url_params.get('code') )
-        }else{
-            send(response);
-        }
-    }).catch(error => {
-        res.send(error);
+        redirect_uri: REDIRECT_URI
+      }),
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${new Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64')}`,
+      },
     })
-    res.send('callback');
-})
+      .then(response => {
+        if (response.status === 200) {
+          res.send(`<pre>${JSON.stringify(response.data, null, 2)}</pre>`);
+        } else {
+          res.send(response);
+        }
+      })
+      .catch(error => {
+        res.send(error);
+      });
+  });
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
