@@ -59,7 +59,9 @@ app.get('/auth/callback', (req,res)=>{
     }).then(response => {
         if(response.status === 200){
             console.log("acceso al token completado");
-            res.send( response.data.toString())
+            //res.send( response.data.toString())
+            const url_params = new URLSearchParams(window.location.search);
+            res.send( url_params.get('code') )
         }else{
             send(response);
         }
